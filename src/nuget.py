@@ -1,6 +1,7 @@
 """Retrieval of dependency information from the NuGet registration API."""
 
 import json
+import gzip
 from typing import Any
 from urllib.parse import quote
 from urllib.request import urlopen
@@ -14,7 +15,10 @@ def registration_url(repository: str, package: str) -> str:
 def request_json(url: str) -> dict[str, Any]:
     """Download and decode a JSON document using the standard library."""
     with urlopen(url, timeout=15) as response:
-        return json.load(response)
+        data = response.read()
+        if response.headers.get("Content-Encoding") == "gzip":
+            data = gzip.decompress(data)
+    return json.loads(data.decode("utf-8"))
 
 
 def get_direct_dependencies(repository: str, package: str) -> list[str]:

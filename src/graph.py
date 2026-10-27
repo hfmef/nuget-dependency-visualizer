@@ -21,10 +21,13 @@ def validate_test_graph(raw_graph: dict[object, object]) -> Graph:
     """Validate and normalize an in-memory test graph."""
     graph: Graph = {}
     for name, dependencies in raw_graph.items():
-        if not isinstance(name, str) or not name.isalpha() or not name.isupper():
+        invalid_name = not isinstance(name, str) or not name.isalpha()
+        if invalid_name or not name.isupper():
             raise ValueError("Test packages must use uppercase Latin letters.")
-        if not isinstance(dependencies, list) or not all(
-                isinstance(item, str) for item in dependencies):
+        valid_dependencies = isinstance(dependencies, list) and all(
+            isinstance(item, str) for item in dependencies
+        )
+        if not valid_dependencies:
             raise ValueError("Every test package must have a dependency list.")
         graph[name] = dependencies
     return graph
