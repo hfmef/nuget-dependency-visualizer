@@ -59,3 +59,26 @@ def process_queue(
 def test_source(graph: Graph) -> DependencySource:
     """Create a dependency source backed by a static test graph."""
     return lambda package: graph.get(package, [])
+
+
+def dependency_load_order(graph: Graph, package: str) -> list[str]:
+    """Return dependencies before dependants, based on the built graph."""
+    order: list[str] = []
+    visiting: set[str] = set()
+    visited: set[str] = set()
+    append_load_order(graph, package, visiting, visited, order)
+    return order
+
+
+def append_load_order(
+        graph: Graph, package: str, visiting: set[str], visited: set[str],
+        order: list[str]) -> None:
+    """Append packages after their dependencies while safely handling cycles."""
+    if package in visiting or package in visited:
+        return
+    visiting.add(package)
+    for dependency in graph.get(package, []):
+        append_load_order(graph, dependency, visiting, visited, order)
+    visiting.remove(package)
+    visited.add(package)
+    order.append(package)
