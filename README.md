@@ -18,6 +18,11 @@ keeps only names, while NuGet also resolves version ranges, target frameworks,
 assets and conflict rules. In a dependency cycle NuGet resolves versions; this
 tool stops revisiting a package and prints each name once.
 
+The visualizer prints Mermaid code, generates `dependency_graph.svg` and can
+open it in the default browser with `--open-image`. It also prints an ASCII
+tree when `--ascii-tree` is specified. SVG is generated during execution and
+is intentionally excluded from Git.
+
 ## Start
 
 ```bat
@@ -34,6 +39,17 @@ python run.py A --test-mode --test-file tests/graph_cycle.json --exclude E
 ```bat
 python run.py A --test-mode --test-file tests/graph_cycle.json --load-order
 ```
+
+```bat
+python run.py A --test-mode --test-file tests/graph_cycle.json --ascii-tree --open-image
+python run.py B --test-mode --test-file tests/graph_cycle.json --ascii-tree
+python run.py C --test-mode --test-file tests/graph_cycle.json
+```
+
+For a NuGet package, NuGet's dependency graph tools can choose different
+versions and framework-specific dependency groups. This program shows all
+declared dependency groups from a registration entry, so its graph may include
+more edges than one concrete restore graph.
 
 ## Tests
 
