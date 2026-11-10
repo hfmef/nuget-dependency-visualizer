@@ -8,8 +8,23 @@ from urllib.request import urlopen
 
 
 def registration_url(repository: str, package: str) -> str:
-    """Build the URL of a NuGet registration index."""
-    return f"{repository.rstrip('/')}/{quote(package.lower())}/index.json"
+    """Resolve the registration endpoint from a NuGet V3 service index."""
+    base = repository.rstrip("/")
+    if base.endswith("/v3/index.json"):
+        resources = request_json(repository).get("resources", [])
+        candidates = [
+            item for item in resources
+            if "RegistrationsBaseUrl" in str(item.get("@type", ""))
+        ]
+        preferred = next(
+            (item for item in candidates if "SemVer2" in str(item.get("@type", ""))),
+            None,
+        )
+        selected = preferred or (candidates[0] if candidates else None)
+        if selected is None:
+            raise ValueError("No NuGet registration endpoint in service index.")
+        base = selected["@id"].rstrip("/")
+    return f"{base}/{quote(package.lower())}/index.json"
 
 
 def request_json(url: str) -> dict[str, Any]:
@@ -34,8 +49,16 @@ def latest_catalog_entry(data: dict[str, Any]) -> dict[str, Any]:
     items = data.get("items", [])
     if not items:
         raise ValueError("Package registration does not contain versions.")
-    leaf = items[-1].get("items", [])[-1]
+    page = items[-1]
+    leaves = page.get("items")
+    if not leaves:
+        leaves = request_json(page["@id"]).get("items", [])
+    if not leaves:
+        raise ValueError("Registration page has no versions.")
+    leaf = leaves[-1]
     entry = leaf.get("catalogEntry")
+    if isinstance(entry, str):
+        entry = request_json(entry)
     if not isinstance(entry, dict):
         raise ValueError("Package registration has an invalid catalog entry.")
     return entry
