@@ -4,6 +4,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 
+# Описываем параметры командной строки (--test-mode, --open-image и др.).
 def build_parser() -> ArgumentParser:
     """Create the command-line parser."""
     parser = ArgumentParser(description="Visualize NuGet package dependencies.")
@@ -24,6 +25,7 @@ def build_parser() -> ArgumentParser:
     return parser
 
 
+# Проверяем, что необходимые параметры переданы правильно.
 def parse_args(arguments: list[str] | None = None) -> Namespace:
     """Parse and validate command-line arguments."""
     args = build_parser().parse_args(arguments)
@@ -38,6 +40,7 @@ def parse_args(arguments: list[str] | None = None) -> Namespace:
     return args
 
 
+# Выводим текущие настройки запуска.
 def print_configuration(args: Namespace) -> None:
     """Print every configurable value as key-value pairs."""
     values = {
