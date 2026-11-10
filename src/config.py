@@ -3,10 +3,8 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-
-# Описываем параметры командной строки (--test-mode, --open-image и др.).
 def build_parser() -> ArgumentParser:
-    """Create the command-line parser."""
+    """Описываем параметры запуска."""
     parser = ArgumentParser(description="Visualize NuGet package dependencies.")
     parser.add_argument("package", help="NuGet package identifier")
     parser.add_argument("--repository", help="NuGet registration API URL")
@@ -24,10 +22,8 @@ def build_parser() -> ArgumentParser:
     parser.add_argument("--exclude", default="", help="Ignored-name substring")
     return parser
 
-
-# Проверяем, что необходимые параметры переданы правильно.
 def parse_args(arguments: list[str] | None = None) -> Namespace:
-    """Parse and validate command-line arguments."""
+    """Проверяем обязательные параметры запуска."""
     args = build_parser().parse_args(arguments)
     if args.test_mode and args.test_file is None:
         raise ValueError("Test mode requires --test-file.")
@@ -39,10 +35,8 @@ def parse_args(arguments: list[str] | None = None) -> Namespace:
         raise ValueError("Package identifier cannot be empty.")
     return args
 
-
-# Выводим текущие настройки запуска.
 def print_configuration(args: Namespace) -> None:
-    """Print every configurable value as key-value pairs."""
+    """Показываем текущие настройки."""
     values = {
         "package": args.package,
         "repository": args.repository or "-",
