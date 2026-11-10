@@ -50,3 +50,9 @@ def dependencies_from_groups(groups: list[dict[str, Any]]) -> list[str]:
             if isinstance(name, str) and name not in names:
                 names.append(name)
     return names
+
+
+def get_latest_version(repository: str, package: str) -> str:
+    """Return the latest registration version for a package."""
+    entry = latest_catalog_entry(request_json(registration_url(repository, package)))
+    return str(entry.get("version", ""))
