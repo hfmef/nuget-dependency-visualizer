@@ -11,6 +11,23 @@ package manager or third-party dependency library. It builds the full graph by
 recursive breadth-first traversal, handles cycles and can exclude package names
 containing a chosen substring.
 
+## Options
+
+| Option | Meaning |
+| --- | --- |
+| `package` | Package identifier to analyze. |
+| `--repository URL` | Base URL of the NuGet registration API. Required outside test mode. |
+| `--test-mode` | Use a local JSON graph instead of NuGet. |
+| `--test-file PATH` | Test graph path. Required with test mode. |
+| `--exclude TEXT` | Ignore names containing `TEXT`. |
+| `--load-order` | Print dependencies before the package that needs them. |
+| `--ascii-tree` | Print dependencies as an ASCII tree. |
+| `--open-image` | Open the generated SVG diagram in the default browser. |
+
+The test graph is a JSON object. Its package names must use uppercase Latin
+letters and values are lists of direct dependencies. The supplied example also
+contains a cycle, which is handled without an endless traversal.
+
 The `--load-order` mode prints dependencies before the selected package. It is
 conceptually close to NuGet restore: a package must be available before a
 package that references it. The order can differ from NuGet because this tool
@@ -56,3 +73,9 @@ more edges than one concrete restore graph.
 ```bat
 python -m unittest discover -s tests
 ```
+
+## Error handling
+
+The program rejects an empty package name, a missing repository in normal mode,
+test mode without a graph file and a nonexistent test file. Invalid test graph
+format is also reported as a configuration error.
