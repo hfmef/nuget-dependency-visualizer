@@ -7,6 +7,7 @@ from pathlib import Path
 from src.graph import Graph
 
 
+# Превращаем связи пакетов в текст диаграммы Mermaid.
 def mermaid_text(graph: Graph, versions: dict[str, str] | None = None) -> str:
     """Return a Mermaid flowchart for the dependency graph."""
     versions = versions or {}
@@ -23,11 +24,13 @@ def mermaid_text(graph: Graph, versions: dict[str, str] | None = None) -> str:
     return "\n".join(lines)
 
 
+# Делаем безопасный идентификатор узла Mermaid.
 def node_id(name: str) -> str:
     """Convert a package name to a Mermaid-safe identifier."""
     return "node_" + "".join(char if char.isalnum() else "_" for char in name)
 
 
+# Создаём текстовое дерево зависимостей.
 def ascii_tree(graph: Graph, root: str) -> str:
     """Return a readable ASCII dependency tree."""
     lines = [root]
@@ -35,6 +38,7 @@ def ascii_tree(graph: Graph, root: str) -> str:
     return "\n".join(lines)
 
 
+# Рекурсивно строим ветки дерева, отмечая циклы.
 def append_ascii_children(
         graph: Graph, package: str, prefix: str, ancestors: set[str],
         lines: list[str]) -> None:
@@ -52,6 +56,7 @@ def append_ascii_children(
             )
 
 
+# Рисуем SVG локально: блоки, стрелки, названия и версии.
 def save_svg(graph: Graph, destination: Path,
              versions: dict[str, str] | None = None) -> Path:
     """Create a layered directed SVG graph locally, without network access."""
@@ -70,6 +75,7 @@ def save_svg(graph: Graph, destination: Path,
         return destination
 
     # Assign levels by breadth-first traversal; cycles do not cause loops.
+    # BFS назначает уровни блокам для размещения на рисунке.
     depths = {}
     roots = [names[0]]
     for root in roots + names:
@@ -106,6 +112,7 @@ def save_svg(graph: Graph, destination: Path,
         '<path d="M 0 0 L 10 5 L 0 10 z" fill="#677a96"/></marker></defs>',
         '<rect width="100%" height="100%" fill="#ffffff"/>',
     ]
+    # Рисуем стрелки от пакета к его зависимостям.
     for parent, children in graph.items():
         for child in children:
             x1, y1 = positions[parent]
@@ -128,6 +135,7 @@ def save_svg(graph: Graph, destination: Path,
                 f'<path d="{path}" fill="none" stroke="#677a96" '
                 f'stroke-width="1.8" marker-end="url(#arrow)"/>'
             )
+    # Рисуем блоки и подписи пакетов.
     for name, (x, y) in positions.items():
         label = html.escape(name)
         version = html.escape(versions.get(name, ""))
@@ -151,6 +159,7 @@ def save_svg(graph: Graph, destination: Path,
     return destination
 
 
+# Открываем готовый SVG в браузере.
 def open_svg(path: Path) -> None:
     """Open the generated SVG in the system browser."""
     webbrowser.open(path.resolve().as_uri())
