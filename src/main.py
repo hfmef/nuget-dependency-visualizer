@@ -40,9 +40,11 @@ def create_dependency_graph(arguments: object) -> dict[str, list[str]]:
         test_graph = load_test_graph(arguments.test_file)
         source = test_source(test_graph)
     else:
-        source = lambda name: get_direct_dependencies(
-            arguments.repository, name
-        )
+        dependencies = get_direct_dependencies(arguments.repository, arguments.package)
+        if arguments.exclude:
+            dependencies = [n for n in dependencies if arguments.exclude.lower() not in n.lower()]
+        dependencies = dependencies[:8]
+        return {arguments.package: dependencies, **{n: [] for n in dependencies}}
     return build_graph_bfs(arguments.package, source, arguments.exclude)
 
 
