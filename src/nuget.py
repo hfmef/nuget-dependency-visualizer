@@ -7,6 +7,7 @@ from urllib.parse import quote
 from urllib.request import urlopen
 
 
+# Находим адрес NuGet API для сведений о пакете.
 def registration_url(repository: str, package: str) -> str:
     """Resolve the registration endpoint from a NuGet V3 service index."""
     base = repository.rstrip("/")
@@ -27,6 +28,7 @@ def registration_url(repository: str, package: str) -> str:
     return f"{base}/{quote(package.lower())}/index.json"
 
 
+# Загружаем JSON по HTTPS и при необходимости распаковываем gzip.
 def request_json(url: str) -> dict[str, Any]:
     """Download and decode a JSON document using the standard library."""
     with urlopen(url, timeout=15) as response:
@@ -36,6 +38,7 @@ def request_json(url: str) -> dict[str, Any]:
     return json.loads(data.decode("utf-8"))
 
 
+# Получаем прямые зависимости выбранного пакета.
 def get_direct_dependencies(repository: str, package: str) -> list[str]:
     """Return direct dependency names of the latest package registration."""
     data = request_json(registration_url(repository, package))
@@ -44,6 +47,7 @@ def get_direct_dependencies(repository: str, package: str) -> list[str]:
     return dependencies_from_groups(groups)
 
 
+# Выбираем запись версии из каталога NuGet.
 def latest_catalog_entry(data: dict[str, Any]) -> dict[str, Any]:
     """Extract the catalog entry from the newest registration leaf."""
     items = data.get("items", [])
@@ -64,6 +68,7 @@ def latest_catalog_entry(data: dict[str, Any]) -> dict[str, Any]:
     return entry
 
 
+# Собираем имена зависимостей из групп платформ без повторов.
 def dependencies_from_groups(groups: list[dict[str, Any]]) -> list[str]:
     """Collect unique dependency names from all target-framework groups."""
     names: list[str] = []
@@ -75,6 +80,7 @@ def dependencies_from_groups(groups: list[dict[str, Any]]) -> list[str]:
     return names
 
 
+# Получаем номер версии для подписи блока на графе.
 def get_latest_version(repository: str, package: str) -> str:
     """Return the latest registration version for a package."""
     entry = latest_catalog_entry(request_json(registration_url(repository, package)))
