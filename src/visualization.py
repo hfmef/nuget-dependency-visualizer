@@ -1,6 +1,7 @@
 """Text and SVG representations of a dependency graph."""
 
 import html
+import math
 import webbrowser
 from pathlib import Path
 
@@ -49,41 +50,74 @@ def append_ascii_children(
 
 
 def save_svg(graph: Graph, destination: Path) -> Path:
-    """Create a compact SVG preview image without third-party libraries."""
-    labels = list(graph)
-    height = 70 + len(labels) * 50
-    body = svg_nodes(labels) + svg_edges(graph, labels)
+    """Draw actual directed connections between package nodes in an SVG."""
+    labels = list(dict.fromkeys(
+        list(graph) + [item for deps in graph.values() for item in deps]
+    ))
+    count = len(labels)
+    radius = max(150, 42 * count)
+    width = height = int(2 * radius + 180)
+    center = width / 2
+    positions = {
+        name: (
+            center + radius * math.cos(2 * math.pi * index / count - math.pi / 2),
+            center + radius * math.sin(2 * math.pi * index / count - math.pi / 2)
+        )
+        for index, name in enumerate(labels)
+    } if count else {}
+    node_radius = 30
+    edges = []
+    for package, dependencies in graph.items():
+        for dependency in dependencies:
+            x1, y1 = positions[package]
+            x2, y2 = positions[dependency]
+            dx, dy = x2 - x1, y2 - y1
+            length = math.hypot(dx, dy)
+            if length == 0:
+                # Self-dependency: draw a visible loop above the node.
+                edges.append(
+                    f'<path d="M {x1-16:.1f} {y1-25:.1f} '
+                    f'C {x1-75:.1f} {y1-95:.1f}, '
+                    f'{x1+75:.1f} {y1-95:.1f}, '
+                    f'{x1+16:.1f} {y1-25:.1f}" class="edge"/>'
+                )
+                continue
+            ux, uy = dx / length, dy / length
+            start_x, start_y = x1 + ux * node_radius, y1 + uy * node_radius
+            end_x, end_y = x2 - ux * (node_radius + 7), y2 - uy * (node_radius + 7)
+            # Curving the edges keeps reverse connections visually distinct.
+            bend = 22
+            mid_x = (start_x + end_x) / 2 - uy * bend
+            mid_y = (start_y + end_y) / 2 + ux * bend
+            edges.append(
+                f'<path d="M {start_x:.1f} {start_y:.1f} '
+                f'Q {mid_x:.1f} {mid_y:.1f} {end_x:.1f} {end_y:.1f}" '
+                f'class="edge"/>'
+            )
+    nodes = []
+    for name, (x, y) in positions.items():
+        safe_name = html.escape(name)
+        nodes.append(
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{node_radius}" class="node"/>'
+            f'<text x="{x:.1f}" y="{y+5:.1f}" text-anchor="middle">'
+            f'{safe_name}</text>'
+        )
     content = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="900" '
-        f'height="{height}">'
-        '<style>text{font:16px sans-serif}.box{fill:#eef5ff;stroke:#356ea0}'
-        '.edge{stroke:#555;stroke-width:2}</style>' + body + '</svg>'
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
+        '<defs><marker id="arrow" markerWidth="9" markerHeight="9" '
+        'refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">'
+        '<path d="M0 0 L9 4.5 L0 9 Z" fill="#56718e"/>'
+        '</marker></defs>'
+        '<rect width="100%" height="100%" fill="white"/>'
+        '<style>text{font:14px sans-serif;fill:#183657}'
+        '.node{fill:#e5f1ff;stroke:#3272b4;stroke-width:2}'
+        '.edge{fill:none;stroke:#56718e;stroke-width:2;'
+        'marker-end:url(#arrow)}</style>'
+        + "".join(edges) + "".join(nodes) + '</svg>'
     )
     destination.write_text(content, encoding="utf-8")
     return destination
-
-
-def svg_nodes(labels: list[str]) -> str:
-    """Return SVG rectangles and labels for packages."""
-    return "".join(
-        f'<rect class="box" x="30" y="{30 + index * 50}" width="220" '
-        f'height="32" rx="5"/><text x="42" y="{52 + index * 50}">'
-        f'{html.escape(label)}</text>'
-        for index, label in enumerate(labels)
-    )
-
-
-def svg_edges(graph: Graph, labels: list[str]) -> str:
-    """Return SVG edge descriptions beside the package list."""
-    rows = []
-    for package, dependencies in graph.items():
-        for dependency in dependencies:
-            rows.append(f"{package} -> {dependency}")
-    return "".join(
-        f'<text x="310" y="{52 + index * 25}">'
-        f'{html.escape(edge)}</text>'
-        for index, edge in enumerate(rows)
-    )
 
 
 def open_svg(path: Path) -> None:
