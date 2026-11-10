@@ -2,7 +2,7 @@
 
 import unittest
 
-from src.graph import build_graph_bfs, test_source
+from src.graph import build_graph_bfs, dependency_load_order, test_source
 
 
 class GraphTests(unittest.TestCase):
@@ -17,3 +17,8 @@ class GraphTests(unittest.TestCase):
         """Filtered package names are omitted from graph and traversal."""
         source = test_source({"A": ["Skip", "B"], "B": []})
         self.assertEqual(build_graph_bfs("A", source, "skip"), {"A": ["B"], "B": []})
+
+    def test_load_order_places_dependencies_first(self) -> None:
+        """The loading sequence puts package prerequisites first."""
+        graph = {"A": ["B", "C"], "B": ["D"], "C": ["D"], "D": []}
+        self.assertEqual(dependency_load_order(graph, "A"), ["D", "B", "C", "A"])

@@ -12,6 +12,7 @@ def build_parser() -> ArgumentParser:
     parser.add_argument("--test-file", type=Path, help="JSON file with test graph")
     parser.add_argument("--test-mode", action="store_true", help="Use a test graph")
     parser.add_argument("--ascii-tree", action="store_true", help="Print ASCII tree")
+    parser.add_argument("--load-order", action="store_true", help="Print dependency load order")
     parser.add_argument("--exclude", default="", help="Substring of ignored packages")
     return parser
 
@@ -38,6 +39,7 @@ def print_configuration(args: Namespace) -> None:
         "test_mode": args.test_mode,
         "test_file": args.test_file or "-",
         "ascii_tree": args.ascii_tree,
+        "load_order": args.load_order,
         "exclude": args.exclude or "-",
     }
     for key, value in values.items():

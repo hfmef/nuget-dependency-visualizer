@@ -11,6 +11,13 @@ package manager or third-party dependency library. It builds the full graph by
 recursive breadth-first traversal, handles cycles and can exclude package names
 containing a chosen substring.
 
+The `--load-order` mode prints dependencies before the selected package. It is
+conceptually close to NuGet restore: a package must be available before a
+package that references it. The order can differ from NuGet because this tool
+keeps only names, while NuGet also resolves version ranges, target frameworks,
+assets and conflict rules. In a dependency cycle NuGet resolves versions; this
+tool stops revisiting a package and prints each name once.
+
 ## Start
 
 ```bat
@@ -22,6 +29,10 @@ input. In normal mode, the application prints the complete dependency graph.
 
 ```bat
 python run.py A --test-mode --test-file tests/graph_cycle.json --exclude E
+```
+
+```bat
+python run.py A --test-mode --test-file tests/graph_cycle.json --load-order
 ```
 
 ## Tests

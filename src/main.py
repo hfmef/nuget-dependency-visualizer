@@ -1,7 +1,12 @@
 """Entry point for the dependency visualizer."""
 
 from src.config import parse_args, print_configuration
-from src.graph import build_graph_bfs, load_test_graph, test_source
+from src.graph import (
+    build_graph_bfs,
+    dependency_load_order,
+    load_test_graph,
+    test_source,
+)
 from src.nuget import get_direct_dependencies
 
 
@@ -11,6 +16,8 @@ def main() -> None:
         arguments = parse_args()
         graph = create_dependency_graph(arguments)
         print_graph(graph)
+        if arguments.load_order:
+            print_load_order(graph, arguments.package)
     except ValueError as error:
         print(f"Configuration error: {error}")
 
@@ -39,6 +46,12 @@ def print_graph(graph: dict[str, list[str]]) -> None:
     for package, dependencies in graph.items():
         suffix = ", ".join(dependencies) if dependencies else "no dependencies"
         print(f"{package}: {suffix}")
+
+
+def print_load_order(graph: dict[str, list[str]], package: str) -> None:
+    """Print the calculated dependency load order."""
+    order = dependency_load_order(graph, package)
+    print("Load order: " + " -> ".join(order))
 
 
 if __name__ == "__main__":
