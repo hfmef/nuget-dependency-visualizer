@@ -7,15 +7,19 @@ from pathlib import Path
 from src.graph import Graph
 
 
-def mermaid_text(graph: Graph) -> str:
+def mermaid_text(graph: Graph, versions: dict[str, str] | None = None) -> str:
     """Return a Mermaid flowchart for the dependency graph."""
+    versions = versions or {}
     lines = ["flowchart TD"]
+    def label(name: str) -> str:
+        version = versions.get(name)
+        return f"{name} {version}" if version else name
     for package, dependencies in graph.items():
         if not dependencies:
-            lines.append(f"    {node_id(package)}[{package}]")
+            lines.append(f"    {node_id(package)}[{label(package)}]")
         for dependency in dependencies:
-            lines.append(f"    {node_id(package)}[{package}] --> "
-                         f"{node_id(dependency)}[{dependency}]")
+            lines.append(f"    {node_id(package)}[{label(package)}] --> "
+                         f"{node_id(dependency)}[{label(dependency)}]")
     return "\n".join(lines)
 
 
@@ -48,9 +52,10 @@ def append_ascii_children(
             )
 
 
-def save_svg(graph: Graph, destination: Path) -> Path:
+def save_svg(graph: Graph, destination: Path,\n             versions: dict[str, str] | None = None) -> Path:
     """Create a layered directed SVG graph locally, without network access."""
     from collections import deque
+    versions = versions or {}
 
     names = list(dict.fromkeys(
         list(graph) + [child for children in graph.values() for child in children]
@@ -124,12 +129,21 @@ def save_svg(graph: Graph, destination: Path) -> Path:
             )
     for name, (x, y) in positions.items():
         label = html.escape(name)
+        version = html.escape(versions.get(name, ""))
+        text_y = y + 23 if version else y + box_h / 2 + 5
+        version_line = (
+            f'<text x="{x+box_w/2:.1f}" y="{y+40:.1f}" '
+            f'text-anchor="middle" font-family="Arial,sans-serif" '
+            f'font-size="12" fill="#596589">{version}</text>'
+            if version else ""
+        )
         parts.append(
             f'<rect x="{x:.1f}" y="{y:.1f}" width="{box_w}" height="{box_h}" '
             f'rx="10" fill="#edf0ff" stroke="#828ac4" stroke-width="1.5"/>'
-            f'<text x="{x+box_w/2:.1f}" y="{y+box_h/2+5:.1f}" '
+            f'<text x="{x+box_w/2:.1f}" y="{text_y:.1f}" '
             f'text-anchor="middle" font-family="Arial,sans-serif" '
             f'font-size="13" fill="#263451">{label}</text>'
+            + version_line
         )
     parts.append('</svg>')
     destination.write_text("".join(parts), encoding="utf-8")
