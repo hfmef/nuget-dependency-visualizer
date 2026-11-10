@@ -52,7 +52,8 @@ def append_ascii_children(
             )
 
 
-def save_svg(graph: Graph, destination: Path,\n             versions: dict[str, str] | None = None) -> Path:
+def save_svg(graph: Graph, destination: Path,
+             versions: dict[str, str] | None = None) -> Path:
     """Create a layered directed SVG graph locally, without network access."""
     from collections import deque
     versions = versions or {}
