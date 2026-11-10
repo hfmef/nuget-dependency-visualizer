@@ -47,13 +47,10 @@ def append_ascii_children(
                 graph, child, next_prefix, ancestors | {package}, lines
             )
 
-def graph_positions(graph: Graph) -> tuple[dict, int, int]:
-    """BFS размещает пакеты по уровням для рисунка SVG."""
+def graph_depths(graph: Graph, names: list[str]) -> dict[str, int]:
+    """BFS определяет уровень каждого пакета для рисунка."""
     from collections import deque
 
-    names = list(graph)
-    names.extend(child for children in graph.values() for child in children)
-    names = list(dict.fromkeys(names))
     depths: dict[str, int] = {}
     for root in names:
         if root in depths:
@@ -66,6 +63,17 @@ def graph_positions(graph: Graph) -> tuple[dict, int, int]:
                 if child not in depths:
                     depths[child] = depths[parent] + 1
                     queue.append(child)
+    return depths
+
+
+def graph_positions(graph: Graph) -> tuple[dict, int, int]:
+    """BFS размещает пакеты по уровням для рисунка SVG."""
+    from collections import deque
+
+    names = list(graph)
+    names.extend(child for children in graph.values() for child in children)
+    names = list(dict.fromkeys(names))
+    depths = graph_depths(graph, names)
     levels: dict[int, list[str]] = {}
     for name in names:
         levels.setdefault(depths[name], []).append(name)
