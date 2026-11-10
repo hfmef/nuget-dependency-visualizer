@@ -43,7 +43,9 @@ def append_ascii_children(
         lines.append(prefix + branch + child + marker)
         if child not in ancestors:
             next_prefix = prefix + ("    " if is_last else "|   ")
-            append_ascii_children(graph, child, next_prefix, ancestors | {package}, lines)
+            append_ascii_children(
+                graph, child, next_prefix, ancestors | {package}, lines
+            )
 
 
 def save_svg(graph: Graph, destination: Path) -> Path:
@@ -52,7 +54,8 @@ def save_svg(graph: Graph, destination: Path) -> Path:
     height = 70 + len(labels) * 50
     body = svg_nodes(labels) + svg_edges(graph, labels)
     content = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="{height}">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="900" '
+        f'height="{height}">'
         '<style>text{font:16px sans-serif}.box{fill:#eef5ff;stroke:#356ea0}'
         '.edge{stroke:#555;stroke-width:2}</style>' + body + '</svg>'
     )
@@ -77,7 +80,8 @@ def svg_edges(graph: Graph, labels: list[str]) -> str:
         for dependency in dependencies:
             rows.append(f"{package} -> {dependency}")
     return "".join(
-        f'<text x="310" y="{52 + index * 25}">{html.escape(edge)}</text>'
+        f'<text x="310" y="{52 + index * 25}">'
+        f'{html.escape(edge)}</text>'
         for index, edge in enumerate(rows)
     )
 

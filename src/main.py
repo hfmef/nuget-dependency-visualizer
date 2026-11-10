@@ -40,7 +40,9 @@ def create_dependency_graph(arguments: object) -> dict[str, list[str]]:
         test_graph = load_test_graph(arguments.test_file)
         source = test_source(test_graph)
     else:
-        source = lambda name: get_direct_dependencies(arguments.repository, name)
+        source = lambda name: get_direct_dependencies(
+            arguments.repository, name
+        )
     return build_graph_bfs(arguments.package, source, arguments.exclude)
 
 
@@ -58,8 +60,9 @@ def print_load_order(graph: dict[str, list[str]], package: str) -> None:
     print("Load order: " + " -> ".join(order))
 
 
-def print_visualizations(graph: dict[str, list[str]], arguments: object) -> None:
-    """Print Mermaid and optional ASCII output, then generate an SVG image."""
+def print_visualizations(
+        graph: dict[str, list[str]], arguments: object) -> None:
+    """Print Mermaid and optional ASCII output, then generate an SVG."""
     print("Mermaid diagram:\n" + mermaid_text(graph))
     if arguments.ascii_tree:
         print("ASCII tree:\n" + ascii_tree(graph, arguments.package))
