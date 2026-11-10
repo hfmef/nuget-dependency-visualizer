@@ -63,7 +63,11 @@ def print_load_order(graph: dict[str, list[str]], package: str) -> None:
 def print_visualizations(
         graph: dict[str, list[str]], arguments: object) -> None:
     """Print Mermaid and optional ASCII output, then generate an SVG."""
-    print("Mermaid diagram:\n" + mermaid_text(graph))
+    mermaid = mermaid_text(graph)
+    print("Mermaid diagram:\n" + mermaid)
+    mermaid_path = Path("dependency_graph.mmd")
+    mermaid_path.write_text(mermaid + "\n", encoding="utf-8")
+    print(f"Mermaid file created: {mermaid_path}")
     if arguments.ascii_tree:
         print("ASCII tree:\n" + ascii_tree(graph, arguments.package))
     image_path = save_svg(graph, Path("dependency_graph.svg"))
