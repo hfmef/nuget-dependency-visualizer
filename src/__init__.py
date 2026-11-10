@@ -1,3 +1,1 @@
-"""NuGet dependency visualizer package."""
-
-# Этот файл помечает папку src как пакет Python.
+"""Пакет Python для построения графов зависимостей NuGet."""
